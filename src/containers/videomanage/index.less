@@ -1,0 +1,58 @@
+@import "../../static/less/common.less";
+.videomanage {
+  height: 100%;
+  background: #fff;
+  display: flex;
+  &-nav {
+    background: #fff;
+    min-height: 100%;
+    height: auto;
+    overflow: hidden;
+    min-width: 200px;
+    // float: left;
+    .ant-menu-item-selected {
+      background: #eeeeee !important;
+      border-left: none !important;
+    }
+    &-title {
+      font-size: 16px;
+      box-sizing: border-box;
+      color: #000000;
+      font-weight: bold;
+      padding-left: 15px;
+      margin-top: 20px;
+      margin-bottom: 15px;
+    }
+  }
+
+  &-content {
+    background: #f2f3f5;
+    height: 100%;
+    overflow-y: auto;
+    float: right;
+    width: calc(~"100% - 200px");
+    box-sizing: border-box;
+    padding: 10px 10px 0 10px;
+  }
+  .ant-menu-item > a:hover {
+    color: rgba(0, 0, 0, 0.65);
+  }
+  .ant-menu-item {
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+  .ant-menu-vertical .ant-menu-item:not(:last-child) {
+    margin-bottom: 0;
+  }
+  .ant-menu-item > a {
+    color: rgba(0, 0, 0, 0.65);
+  }
+  .ant-menu-item-active {
+    background: #efefef;
+  }
+  .ant-menu-inline,
+  .ant-menu-vertical,
+  .ant-menu-vertical-left {
+    border-right: none;
+  }
+}

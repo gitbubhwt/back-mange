@@ -1,0 +1,29 @@
+@import '../../static/less/common.less';
+.content-title{
+    width: 100%;
+    background: #fff;
+    height: 40px;
+    border-bottom:1px solid  #efefef;
+    position: relative;
+    &-line{
+        display: inline-block;
+        width: 4px;
+        height: 18px;
+        background: @greenColor;
+        position: absolute;
+        left: 0;
+        top:5px;
+    }
+    &-name{
+        padding-left: 12px;
+        font-size: 16px;
+        color:@mainFont;
+        font-weight: bold;
+    }
+    &-back{
+        float: right;
+        line-height: 40px;
+        font-size: 14px;
+        cursor: pointer;
+    }
+}
