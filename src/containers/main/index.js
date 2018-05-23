@@ -15,6 +15,7 @@ const { Header, Sider, Content } = Layout;
 import bigImg from "Static/images/big.png";
 import smallImg from "Static/images/small.jpg";
 import { Link } from "react-router";
+import Const from "../../constants/const.js";
 const onClick = function({ key }) {
   message.info(`Click on item ${key}`);
 };
@@ -49,14 +50,12 @@ class Main extends React.Component {
   logOut() {
     axios({
       method: "get",
-      url: "/cloud/admin/loginOut"
+      url: Const.ADMIN_LOGIN_OUT
     }).then(res => {
       if (res == null) {
         return;
       }
-      const key = "user";
-      let value = "";
-      window.sessionStorage.setItem(key, value);
+      window.sessionStorage.clear("user");
       window.location.href = "/#/login";
     });
   }

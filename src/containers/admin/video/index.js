@@ -6,7 +6,7 @@ import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
 import { createForm } from "rc-form";
 import axios from "../../../AxiosInterceptors.jsx";
-import { Form, Table, Icon, Divider, Button } from "antd";
+import { Form, Table, Icon, Divider, Button, Popconfirm } from "antd";
 import Const from "../../../constants/const.js";
 import moment from "moment";
 const columns = [
@@ -117,15 +117,10 @@ class VideoList extends React.Component {
     selectedRowKeys: [], // Check here to configure the default column
     loading: false
   };
-  start = () => {
-    this.setState({ loading: true });
-    // ajax request after empty completing
-    setTimeout(() => {
-      this.setState({
-        selectedRowKeys: [],
-        loading: false
-      });
-    }, 1000);
+  delete = () => {
+    let ids = this.state.selectedRowKeys.join(",");
+    // if(ids.length==0)
+    // console.log(ids.length);
   };
   onSelectChange = selectedRowKeys => {
     console.log("selectedRowKeys changed: ", selectedRowKeys);
@@ -137,6 +132,10 @@ class VideoList extends React.Component {
       selectedRowKeys,
       onChange: this.onSelectChange
     };
+    let hasSelected = true;
+    if (selectedRowKeys && selectedRowKeys.length > 0) {
+      hasSelected = false;
+    }
     return (
       <div className="videolist">
         <ContentTitle contenttitle="视频列表" />
@@ -159,6 +158,24 @@ class VideoList extends React.Component {
               onChange: this.pageNumChange.bind(this),
               onShowSizeChange: this.pageSizeChange.bind(this)
             }}
+            footer={() => (
+              <div>
+                <Popconfirm
+                  placement="top"
+                  title={"确认删除吗?"}
+                  onConfirm={this.delete.bind(this)}
+                  okText="确认"
+                  cancelText="放弃"
+                >
+                  <Button icon="delete" type="primary" disabled={hasSelected}>
+                    &nbsp;删除
+                  </Button>
+                </Popconfirm>
+                <span style={{ marginLeft: 8 }}>
+                  {!hasSelected ? `已选择 ${selectedRowKeys.length} 项` : ""}
+                </span>
+              </div>
+            )}
           />
         </div>
       </div>

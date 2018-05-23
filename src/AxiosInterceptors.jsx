@@ -34,6 +34,7 @@ axios.interceptors.response.use(response => {
     if (response.data.code == -1) {
       //token invalid
       console.log("token invalid", response.data);
+      window.sessionStorage.clear("user");
       window.location.href = "/#/login";
       return null;
     } else if (response.data.code == 500) {

@@ -20,33 +20,85 @@ import {
 const { TextArea } = Input;
 const Option = Select.Option;
 const FormItem = Form.Item;
+import Const from "../../../constants/const.js";
+import axios from "../../../AxiosInterceptors.jsx";
 
 export default class VideoAdd extends Component {
   constructor(props, context) {
     super(props, context);
     this.state = {
-      timeDomChange: true
+      timeDomChange: true,
+      classifyAllData: [],
+      token: {},
+      fileList: []
     };
-
-    this.WorkAllDom = "";
+    this.classifyDom = "";
   }
 
-  cancel() {}
-  save() {}
+  componentWillMount() {
+    this.init();
+  }
+
+  submit() {
+    let params = {};
+    const self = this;
+    this.props.form.validateFields((err, values) => {
+      if (!err) {
+        console.log(values);
+      }
+    });
+  }
+
+  // 页面初始化
+  init() {
+    //初始化token
+    let userInfo = window.sessionStorage.getItem("user");
+    if (userInfo != null && userInfo != "") {
+      let user = JSON.parse(userInfo);
+      let obj = new Object();
+      obj.userId = user.userId;
+      obj.token = user.token;
+      this.setState({ token: obj });
+    }
+    //初始化分类
+    axios({
+      method: "get",
+      url: Const.ADMIN_CLASSIFY_ALL
+    }).then(res => {
+      console.log(res);
+      if (res == null) {
+        return;
+      }
+      this.setState({ classifyAllData: res });
+    });
+  }
+
+  uploadResult() {}
 
   render() {
     const formItemLayout = {
-      labelCol: { span: 2 },
-      wrapperCol: { span: 8 }
-    };
-    const { getFieldDecorator } = this.props.form;
-
-    const formItemLayoutWithOutLabel = {
+      labelCol: {
+        xs: { span: 16 },
+        sm: { span: 4 }
+      },
       wrapperCol: {
-        xs: { span: 24, offset: 0 },
-        sm: { span: 20, offset: 4 }
+        xs: { span: 16 },
+        sm: { span: 8 }
       }
     };
+    const tailFormItemLayout = {
+      wrapperCol: {
+        xs: {
+          span: 16,
+          offset: 0
+        },
+        sm: {
+          span: 8,
+          offset: 4
+        }
+      }
+    };
+    const { getFieldDecorator } = this.props.form;
 
     const fileList = [
       {
@@ -60,75 +112,84 @@ export default class VideoAdd extends Component {
       }
     ];
 
+    // var object = new Object();
+    // object.token = "";
+    // object.userId = "";
+
     const props = {
       action: "/cloud/admin/uploadFile",
-      listType: "picture",
-      defaultFileList: [...fileList],
-      className: "upload-list-inline"
+      headers: this.state.token,
+      defaultFileList: this.state.fileList,
+      className: "upload-list-inline",
+      onChange({ file, fileList }) {
+        if (file.status !== "uploading") {
+          console.log(file, fileList);
+          let obj = new Object();
+          obj.uid = this.state.fileList.length + 1;
+          // obj.name =
+        }
+      }
     };
+    this.classifyDom = this.state.classifyAllData.map(function(item, index) {
+      return (
+        <Option value={item.id} key={index}>
+          {item.name}
+        </Option>
+      );
+    });
 
     return (
       <div className="videolist">
         <ContentTitle contenttitle="创建视频" />
+
         <Form style={{ marginTop: "15px" }}>
-          <Row>
-            <FormItem label="名称" {...formItemLayout}>
-              {getFieldDecorator("name", {
-                rules: [
-                  {
-                    required: true,
-                    message: "请输入名称"
-                  }
-                ]
-              })(<Input placeholder="请输入名称" />)}
-            </FormItem>
+          <FormItem label="名称" {...formItemLayout}>
+            {getFieldDecorator("name", {
+              rules: [
+                {
+                  required: true,
+                  message: "请输入名称"
+                }
+              ]
+            })(<Input placeholder="请输入名称" />)}
+          </FormItem>
 
-            <FormItem label="分类" {...formItemLayout}>
-              {getFieldDecorator("working_hours", {
-                rules: [
-                  {
-                    required: true,
-                    message: "请选择分类"
-                  }
-                ]
-              })(
-                <Select placeholder="请选择分类" showSearch>
-                  {this.WorkAllDom}
-                </Select>
-              )}
-            </FormItem>
+          <FormItem label="分类" {...formItemLayout}>
+            {getFieldDecorator("classify", {
+              rules: [
+                {
+                  required: true,
+                  message: "请选择分类"
+                }
+              ]
+            })(
+              <Select placeholder="请选择分类" showSearch>
+                {this.classifyDom}
+              </Select>
+            )}
+          </FormItem>
 
-            <FormItem label="描述" {...formItemLayout}>
-              {getFieldDecorator("info")(
-                <TextArea rows={4} placeholder="请输入描述" />
-              )}
-            </FormItem>
+          <FormItem label="描述" {...formItemLayout}>
+            {getFieldDecorator("info")(
+              <TextArea rows={4} placeholder="请输入描述" />
+            )}
+          </FormItem>
 
-            <FormItem label="文件" {...formItemLayout}>
-              {getFieldDecorator("info")(
-                <Upload {...props}>
-                  <Button>
-                    <Icon type="upload" /> 上传文件
-                  </Button>
-                </Upload>
-              )}
-            </FormItem>
-          </Row>
+          <FormItem label="文件" {...formItemLayout}>
+            {getFieldDecorator("info")(
+              <Upload {...props}>
+                <Button>
+                  <Icon type="upload" /> 上传文件
+                </Button>
+              </Upload>
+            )}
+          </FormItem>
+          <FormItem {...tailFormItemLayout}>
+            <Button type="primary" onClick={this.submit.bind(this)}>
+              提交
+            </Button>
+          </FormItem>
         </Form>
-        <Row>
-          <Col span={1} />
-          <Col span={2}>
-            <Button type="primary" onClick={this.cancel.bind(this)}>
-              &nbsp;取消
-            </Button>
-          </Col>
-          <Col span={1} />
-          <Col span={10}>
-            <Button type="primary" onClick={this.save.bind(this)}>
-              &nbsp;保存
-            </Button>
-          </Col>
-        </Row>
       </div>
     );
   }

@@ -10,6 +10,7 @@ import axios from "../../AxiosInterceptors.jsx";
 import SHA from "../../utils/sha1.js";
 import MD5 from "../../utils/md5.js";
 import { hashHistory } from "react-router";
+import Const from "../../constants/const.js";
 export default class Login extends Component {
   constructor(props, context) {
     super(props, context);
@@ -24,7 +25,7 @@ export default class Login extends Component {
         values.password = SHA.sha1(values.password);
         axios({
           method: "post",
-          url: "/cloud/admin/login",
+          url: Const.ADMIN_LOGIN,
           data: {
             userName: values.userName,
             password: values.password
