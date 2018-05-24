@@ -15,7 +15,8 @@ import {
   Alert,
   Select,
   Icon,
-  Upload
+  Upload,
+  message
 } from "antd";
 const { TextArea } = Input;
 const Option = Select.Option;
@@ -32,19 +33,51 @@ export default class VideoAdd extends Component {
       token: {},
       fileList: []
     };
-    this.classifyDom = "";
+    this.classifyDom = ""; //分类
+    this.coverCount = 1;
+    this.coverPath = []; //封面文件路径
+    this.filePath = []; //文件路径
   }
 
   componentWillMount() {
     this.init();
   }
 
+  //提交数据
   submit() {
     let params = {};
     const self = this;
     this.props.form.validateFields((err, values) => {
       if (!err) {
-        console.log(values);
+        if (this.coverPath.length == 0) {
+          message.info("请上传封面");
+          return;
+        }
+        if (this.filePath.length == 0) {
+          message.info("请至少上传一个文件");
+          return;
+        }
+        let cover = this.coverPath[0].path;
+        let path = this.filePath;
+        console.log(cover, path);
+        this.setState({ loading: true });
+        axios({
+          method: "post",
+          url: Const.ADMIN_VIDEO_ADD,
+          data: {
+            name: values.name,
+            info: values.info,
+            cover: cover,
+            classify: values.classify,
+            path: path
+          }
+        }).then(res => {
+          this.setState({ loading: false });
+          if (res == null) {
+            return;
+          }
+          message.success(res);
+        });
       }
     });
   }
@@ -73,7 +106,115 @@ export default class VideoAdd extends Component {
     });
   }
 
-  uploadResult() {}
+  pushPath(data, i) {
+    let obj = new Object();
+    obj.path = data.path;
+    obj.order = i;
+    obj.createTime = data.createTime;
+    return obj;
+  }
+
+  removePath(paths, key) {
+    let index = -1;
+    for (let i = 0; i < paths.length; i++) {
+      if (paths[i].path == key) {
+        index = i;
+        break;
+      }
+    }
+    return index;
+  }
+
+  //文件上传事件更新
+  uploadChange = info => {
+    let file = info.file;
+    if (file.status == "done") {
+      const code = file.response.code;
+      if (code != 0) {
+        console.log("上传失败,code:", code);
+        return;
+      }
+      let data = file.response.data;
+      //填充数据
+      this.filePath.push(this.pushPath(data, this.filePath.length + 1));
+    } else if (file.status == "removed") {
+      const code = file.response.code;
+      if (code != 0) {
+        console.log("删除失败,code:", code);
+        return;
+      }
+      this.setState({ loading: true });
+      let path = file.response.data.path;
+      let url = Const.ADMIN_DEL_FILE + "?path=" + path;
+      axios({
+        method: "get",
+        url: url
+      }).then(res => {
+        this.setState({ loading: false });
+        if (res == null) {
+          return;
+        }
+        message.success(res);
+        let index = this.removePath(this.filePath, path);
+        this.filePath.splice(index);
+      });
+    }
+  };
+
+  //封面文件上传
+  coveruploadChange = info => {
+    info.fileList.slice(1);
+    let file = info.file;
+    if (file.status == "done") {
+      const code = file.response.code;
+      if (code != 0) {
+        console.log("上传失败,code:", code);
+        return;
+      }
+      let data = file.response.data;
+      //填充数据
+      this.coverPath.push(this.pushPath(data, this.coverPath.length + 1));
+    } else if (file.status == "removed") {
+      const code = file.response.code;
+      if (code != 0) {
+        console.log("删除失败,code:", code);
+        return;
+      }
+      this.setState({ loading: true });
+      let path = file.response.data.path;
+      let url = Const.ADMIN_DEL_FILE + "?path=" + path;
+      axios({
+        method: "get",
+        url: url
+      }).then(res => {
+        this.setState({ loading: false });
+        if (res == null) {
+          return;
+        }
+        message.success(res);
+        let index = this.removePath(this.coverPath, path);
+        this.coverPath.splice(index);
+      });
+    }
+  };
+
+  //封面上传之前校验
+  coverBeforeUpload = file => {
+    let count = this.coverPath.length;
+    if (count >= 1) {
+      message.warn("抱歉,封面只能上传一张");
+      return false;
+    }
+    let fileType = "";
+    if (file.name.indexOf(".") != -1) {
+      fileType = file.name.split(".")[1];
+    }
+    if (fileType == "png" || fileType == "jpg") {
+      return true;
+    }
+    message.warn("请上传png或者jpg格式图片");
+    return false;
+  };
 
   render() {
     const formItemLayout = {
@@ -100,35 +241,41 @@ export default class VideoAdd extends Component {
     };
     const { getFieldDecorator } = this.props.form;
 
-    const fileList = [
-      {
-        uid: -1,
-        name: "xxx.png",
-        status: "done",
-        url:
-          "https://zos.alipayobjects.com/rmsportal/jkjgkEfvpUPVyRjUImniVslZfWPnJuuZ.png",
-        thumbUrl:
-          "https://zos.alipayobjects.com/rmsportal/jkjgkEfvpUPVyRjUImniVslZfWPnJuuZ.png"
-      }
-    ];
-
-    // var object = new Object();
-    // object.token = "";
-    // object.userId = "";
+    //const files = [
+    // {
+    //   uid: -1,
+    //   name: "xxx.png",
+    //   status: "done",
+    //   url:
+    //     "https://zos.alipayobjects.com/rmsportal/jkjgkEfvpUPVyRjUImniVslZfWPnJuuZ.png",
+    //   thumbUrl:
+    //     "https://zos.alipayobjects.com/rmsportal/jkjgkEfvpUPVyRjUImniVslZfWPnJuuZ.png"
+    // }
+    // ];
 
     const props = {
-      action: "/cloud/admin/uploadFile",
+      action: Const.ADMIN_UPLOAD_FILE,
       headers: this.state.token,
-      defaultFileList: this.state.fileList,
       className: "upload-list-inline",
-      onChange({ file, fileList }) {
-        if (file.status !== "uploading") {
-          console.log(file, fileList);
-          let obj = new Object();
-          obj.uid = this.state.fileList.length + 1;
-          // obj.name =
+      onChange: this.uploadChange,
+      beforeUpload(file) {
+        let fileType = "";
+        if (file.name.indexOf(".") != -1) {
+          fileType = file.name.split(".")[1];
         }
+        if (fileType == "mp4") {
+          return true;
+        }
+        message.warn("请上传mp4格式文件");
+        return false;
       }
+    };
+    const coverprops = {
+      action: Const.ADMIN_UPLOAD_FILE,
+      headers: this.state.token,
+      className: "upload-list-inline",
+      onChange: this.coveruploadChange,
+      beforeUpload: this.coverBeforeUpload
     };
     this.classifyDom = this.state.classifyAllData.map(function(item, index) {
       return (
@@ -170,13 +317,42 @@ export default class VideoAdd extends Component {
           </FormItem>
 
           <FormItem label="描述" {...formItemLayout}>
-            {getFieldDecorator("info")(
-              <TextArea rows={4} placeholder="请输入描述" />
+            {getFieldDecorator("info", {
+              rules: [
+                {
+                  required: true,
+                  message: "请输入描述"
+                }
+              ]
+            })(<TextArea rows={4} placeholder="请输入描述" />)}
+          </FormItem>
+
+          <FormItem label="封面" {...formItemLayout}>
+            {getFieldDecorator("cover", {
+              rules: [
+                {
+                  required: true,
+                  message: "请上传封面"
+                }
+              ]
+            })(
+              <Upload {...coverprops}>
+                <Button>
+                  <Icon type="upload" /> 上传文件
+                </Button>
+              </Upload>
             )}
           </FormItem>
 
           <FormItem label="文件" {...formItemLayout}>
-            {getFieldDecorator("info")(
+            {getFieldDecorator("path", {
+              rules: [
+                {
+                  required: true,
+                  message: "请至少上传一个文件"
+                }
+              ]
+            })(
               <Upload {...props}>
                 <Button>
                   <Icon type="upload" /> 上传文件

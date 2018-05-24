@@ -21,6 +21,7 @@ export default class Login extends Component {
     const self = this;
     this.props.form.validateFields((err, values) => {
       if (!err) {
+        this.setState({ loading: true });
         values.password = MD5.md5(values.password);
         values.password = SHA.sha1(values.password);
         axios({
@@ -34,6 +35,7 @@ export default class Login extends Component {
             "Content-Type": "application/x-www-form-urlencoded"
           }
         }).then(res => {
+          this.setState({ loading: false });
           if (res == null) {
             return;
           }
