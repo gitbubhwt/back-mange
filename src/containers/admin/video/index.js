@@ -6,56 +6,30 @@ import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
 import { createForm } from "rc-form";
 import axios from "../../../AxiosInterceptors.jsx";
-import { Form, Table, Icon, Divider, Button, Popconfirm } from "antd";
+import { Form, Table, Icon, Divider, Button, Popconfirm, Modal } from "antd";
 import Const from "../../../constants/const.js";
 import moment from "moment";
-const columns = [
-  {
-    title: "名称",
-    key: "name",
-    dataIndex: "name"
-  },
-  {
-    title: "描述",
-    key: "info",
-    dataIndex: "info"
-  },
-  {
-    title: "分类",
-    key: "classify",
-    dataIndex: "classify"
-  },
-  {
-    title: "创建时间",
-    key: "createTime",
-    dataIndex: "createTime",
-    render: (text, record, index) => {
-      return (text = moment(text * 1000).format("YYYY-MM-DD HH:mm:ss"));
-    }
-  },
-  {
-    title: "操作人",
-    key: "updateUser",
-    dataIndex: "updateUser"
-  },
-  {
-    title: "操作时间",
-    key: "updateTime",
-    dataIndex: "updateTime",
-    render: (text, record, index) => {
-      return (text = moment(text * 1000).format("YYYY-MM-DD HH:mm:ss"));
-    }
-  }
-];
 class VideoList extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
+      previewVisible: false,
+      previewImage: "",
       data: [],
       loading: false,
       order: 0
     };
   }
+
+  handleCancel = () => this.setState({ previewVisible: false });
+
+  handlePreview = url => {
+    this.setState({
+      previewImage: url,
+      previewVisible: true
+    });
+  };
+
   componentWillMount() {
     this.init();
   }
@@ -136,6 +110,53 @@ class VideoList extends React.Component {
     if (selectedRowKeys && selectedRowKeys.length > 0) {
       hasSelected = false;
     }
+    const columns = [
+      {
+        title: "名称",
+        key: "name",
+        dataIndex: "name"
+      },
+      {
+        title: "分类",
+        key: "classify",
+        dataIndex: "classify"
+      },
+      {
+        title: "封面",
+        key: "cover",
+        dataIndex: "cover",
+        render: (text, record, index) => {
+          return (
+            <Icon
+              type="scan"
+              onClick={this.handlePreview.bind(this, Const.HEAD + "/" + text)}
+              style={{ cursor: "pointer", width: "30px", height: "20px" }}
+            />
+          );
+        }
+      },
+      {
+        title: "创建时间",
+        key: "createTime",
+        dataIndex: "createTime",
+        render: (text, record, index) => {
+          return (text = moment(text * 1000).format("YYYY-MM-DD HH:mm:ss"));
+        }
+      },
+      {
+        title: "操作人",
+        key: "updateUser",
+        dataIndex: "updateUser"
+      },
+      {
+        title: "操作时间",
+        key: "updateTime",
+        dataIndex: "updateTime",
+        render: (text, record, index) => {
+          return (text = moment(text * 1000).format("YYYY-MM-DD HH:mm:ss"));
+        }
+      }
+    ];
     return (
       <div className="videolist">
         <ContentTitle contenttitle="视频列表" />
@@ -177,6 +198,19 @@ class VideoList extends React.Component {
               </div>
             )}
           />
+        </div>
+        <div>
+          <Modal
+            visible={this.state.previewVisible}
+            footer={null}
+            onCancel={this.handleCancel}
+          >
+            <img
+              alt="example"
+              style={{ width: "100%" }}
+              src={this.state.previewImage}
+            />
+          </Modal>
         </div>
       </div>
     );

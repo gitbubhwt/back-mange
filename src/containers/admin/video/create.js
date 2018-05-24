@@ -68,7 +68,7 @@ export default class VideoAdd extends Component {
             name: values.name,
             info: values.info,
             cover: cover,
-            classify: values.classify,
+            classifyId: values.classifyId,
             path: path
           }
         }).then(res => {
@@ -302,7 +302,7 @@ export default class VideoAdd extends Component {
           </FormItem>
 
           <FormItem label="分类" {...formItemLayout}>
-            {getFieldDecorator("classify", {
+            {getFieldDecorator("classifyId", {
               rules: [
                 {
                   required: true,

@@ -14,6 +14,7 @@ const ADMIN_CLASSIFY_ALL = ADMIN + "/classify/all"; //所有分类
 const USER_VIDEO_LIST = USER + "/video/list"; //视频列表
 
 var Const = {
+  HEAD: HEAD,
   ADMIN_UPLOAD_FILE: ADMIN_UPLOAD_FILE,
   ADMIN_DEL_FILE: ADMIN_DEL_FILE,
   ADMIN_LOGIN: ADMIN_LOGIN,
