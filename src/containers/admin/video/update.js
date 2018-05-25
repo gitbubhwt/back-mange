@@ -56,7 +56,7 @@ export default class VideoUpdate extends Component {
           message.info("请至少上传一个文件");
           return;
         }
-        let cover = this.resdata[0].response.path;
+        let cover = resdata.cover[0].response.data.path;
         let path = [];
         for (let i = 0; i < resdata.paths.length; i++) {
           path.push(resdata.paths[i].response);
@@ -65,7 +65,7 @@ export default class VideoUpdate extends Component {
         this.setState({ loading: true });
         axios({
           method: "post",
-          url: Const.ADMIN_VIDEO_ADD,
+          url: Const.ADMIN_VIDEO_UPDATE,
           data: {
             name: values.name,
             info: values.info,
