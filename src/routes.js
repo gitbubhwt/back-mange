@@ -7,6 +7,8 @@ import Main from "./containers/main";
 import VideoManage from "./containers/videomanage";
 import VideoList from "./containers/admin/video/index.js";
 import CreateVideo from "./containers/admin/video/create.js";
+import DetailVideo from "./containers/admin/video/detail.js";
+import UpdateVideo from "./containers/admin/video/update.js";
 
 import Login from "./containers/admin/login.js";
 
@@ -39,6 +41,8 @@ export default (
           <IndexRedirect to="videolist" />
           <Route path="videolist" component={VideoList} />
           <Route path="createvideo" component={CreateVideo} />
+          <Route path="detailVideo/:id" component={DetailVideo} />
+          <Route path="updateVideo/:id" component={UpdateVideo} />
         </Route>
       </Route>
       <Route path="*" onEnter={validErrorRoute} />

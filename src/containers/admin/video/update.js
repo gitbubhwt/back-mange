@@ -24,14 +24,15 @@ const FormItem = Form.Item;
 import Const from "../../../constants/const.js";
 import axios from "../../../AxiosInterceptors.jsx";
 
-export default class VideoAdd extends Component {
+export default class VideoUpdate extends Component {
   constructor(props, context) {
     super(props, context);
     this.state = {
       timeDomChange: true,
       classifyAllData: [],
       token: {},
-      fileList: []
+      fileList: [],
+      data: {}
     };
     this.classifyDom = ""; //分类
     this.coverCount = 1;
@@ -93,17 +94,64 @@ export default class VideoAdd extends Component {
       obj.token = user.token;
       this.setState({ token: obj });
     }
-    //初始化分类
-    axios({
-      method: "get",
-      url: Const.ADMIN_CLASSIFY_ALL
-    }).then(res => {
-      console.log(res);
-      if (res == null) {
-        return;
-      }
-      this.setState({ classifyAllData: res });
-    });
+
+    //初始化分类和详情
+    let id = this.props.params.id;
+    if (id == null || id == "") {
+      console.log("params is empty,id:", id);
+      return;
+    }
+    this.setState({ loading: true });
+    let url = Const.ADMIN_VIDEO_GET + "?id=" + id;
+    axios
+      .all([axios.get(Const.ADMIN_CLASSIFY_ALL), axios.get(url)])
+      .then(res => {
+        this.setState({ loading: false });
+        console.log(res);
+        this.setState({ classifyAllData: res[0] });
+        let obj = new Object();
+        obj.name = res[1].name;
+        obj.info = res[1].info;
+        obj.classifyId = res[1].classifyId;
+        obj.cover = [
+          {
+            uid: 1,
+            name: res[1].cover,
+            status: "done",
+            url: Const.HEAD + "/" + res[1].cover
+          }
+        ];
+        obj.paths = [];
+        this.coverPath = [
+          {
+            path: res[1].cover,
+            number: 1,
+            createTime: new Date().getTime()
+          }
+        ];
+        for (let i = 0; i < res[1].path.length; i++) {
+          let path = res[1].path[i].path;
+          let number = res[1].path[i].number;
+          let createTime = res[1].path[i].createTime;
+          let te = {
+            uid: i,
+            name: path,
+            status: "done",
+            url: Const.HEAD + "/" + path
+          };
+          obj.paths.push(te);
+          let temp = {
+            path: path,
+            number: number,
+            createTime: createTime
+          };
+          this.filePath.push(temp);
+        }
+        console.log(obj);
+        console.log(this.coverPath);
+        console.log(this.filePath);
+        this.setState({ data: obj });
+      });
   }
 
   pushPath(data, i) {
@@ -127,37 +175,56 @@ export default class VideoAdd extends Component {
 
   //文件上传事件更新
   uploadChange = info => {
+    console.log(info);
     let file = info.file;
+    let data = this.state.data;
     if (file.status == "done") {
       const code = file.response.code;
       if (code != 0) {
         console.log("上传失败,code:", code);
         return;
       }
-      let data = file.response.data;
+      let resdata = file.response.data;
       //填充数据
-      this.filePath.push(this.pushPath(data, this.filePath.length + 1));
+      //   this.filePath.push(this.pushPath(data, this.filePath.length + 1));
+
+      let te = {
+        uid: list.length + 1,
+        name: resdata.path,
+        status: "done",
+        url: Const.HEAD + "/" + resdata.path
+      };
+
+      data.paths.push(te);
+      console.log(data);
+      this.setState({ data: data });
     } else if (file.status == "removed") {
-      const code = file.response.code;
-      if (code != 0) {
-        console.log("删除失败,code:", code);
-        return;
-      }
-      this.setState({ loading: true });
-      let path = file.response.data.path;
-      let url = Const.ADMIN_DEL_FILE + "?path=" + path;
-      axios({
-        method: "get",
-        url: url
-      }).then(res => {
-        this.setState({ loading: false });
-        if (res == null) {
-          return;
-        }
-        message.success(res);
-        let index = this.removePath(this.filePath, path);
-        this.filePath.splice(index);
-      });
+      console.log(info);
+      let uid = file.uid;
+      console.log(uid);
+      data.paths.splice(uid);
+      console.log(data);
+      this.setState({ data: data });
+      //   const code = file.response.code;
+      //   if (code != 0) {
+      //     console.log("删除失败,code:", code);
+      //     return;
+      //   }
+      //   this.setState({ loading: true });
+      //   let path = file.response.data.path;
+      //   let url = Const.ADMIN_DEL_FILE + "?path=" + path;
+      //   axios({
+      //     method: "get",
+      //     url: url
+      //   }).then(res => {
+      //     this.setState({ loading: false });
+      //     if (res == null) {
+      //       return;
+      //     }
+      //     message.success(res);
+      //     let index = this.removePath(this.filePath, path);
+      //     this.filePath.splice(index);
+      //   });
     }
   };
 
@@ -241,18 +308,6 @@ export default class VideoAdd extends Component {
     };
     const { getFieldDecorator } = this.props.form;
 
-    //const files = [
-    // {
-    //   uid: -1,
-    //   name: "xxx.png",
-    //   status: "done",
-    //   url:
-    //     "https://zos.alipayobjects.com/rmsportal/jkjgkEfvpUPVyRjUImniVslZfWPnJuuZ.png",
-    //   thumbUrl:
-    //     "https://zos.alipayobjects.com/rmsportal/jkjgkEfvpUPVyRjUImniVslZfWPnJuuZ.png"
-    // }
-    // ];
-
     const props = {
       action: Const.ADMIN_UPLOAD_FILE,
       headers: this.state.token,
@@ -287,7 +342,7 @@ export default class VideoAdd extends Component {
 
     return (
       <div className="videolist">
-        <ContentTitle contenttitle="创建视频" />
+        <ContentTitle contenttitle="编辑视频" />
 
         <Form style={{ marginTop: "15px" }}>
           <FormItem label="名称" {...formItemLayout}>
@@ -297,7 +352,8 @@ export default class VideoAdd extends Component {
                   required: true,
                   message: "请输入名称"
                 }
-              ]
+              ],
+              initialValue: this.state.data.name
             })(<Input placeholder="请输入名称" />)}
           </FormItem>
 
@@ -308,7 +364,8 @@ export default class VideoAdd extends Component {
                   required: true,
                   message: "请选择分类"
                 }
-              ]
+              ],
+              initialValue: this.state.data.classifyId
             })(
               <Select placeholder="请选择分类" showSearch>
                 {this.classifyDom}
@@ -323,7 +380,8 @@ export default class VideoAdd extends Component {
                   required: true,
                   message: "请输入描述"
                 }
-              ]
+              ],
+              initialValue: this.state.data.info
             })(<TextArea rows={4} placeholder="请输入描述" />)}
           </FormItem>
 
@@ -336,7 +394,7 @@ export default class VideoAdd extends Component {
                 }
               ]
             })(
-              <Upload {...coverprops}>
+              <Upload {...coverprops} fileList={this.state.data.cover}>
                 <Button>
                   <Icon type="upload" /> 上传文件
                 </Button>
@@ -353,7 +411,7 @@ export default class VideoAdd extends Component {
                 }
               ]
             })(
-              <Upload {...props}>
+              <Upload {...props} fileList={this.state.data.paths}>
                 <Button>
                   <Icon type="upload" /> 上传文件
                 </Button>
@@ -362,7 +420,7 @@ export default class VideoAdd extends Component {
           </FormItem>
           <FormItem {...tailFormItemLayout}>
             <Button type="primary" onClick={this.submit.bind(this)}>
-              提交
+              修改
             </Button>
           </FormItem>
         </Form>
@@ -370,9 +428,9 @@ export default class VideoAdd extends Component {
     );
   }
 }
-VideoAdd.contextTypes = {
+VideoUpdate.contextTypes = {
   router: PropTypes.object
 };
-VideoAdd = Form.create()(VideoAdd);
-const mapStateToProps = VideoAdd => VideoAdd;
-module.exports = connect(mapStateToProps)(VideoAdd);
+VideoUpdate = Form.create()(VideoUpdate);
+const mapStateToProps = VideoUpdate => VideoUpdate;
+module.exports = connect(mapStateToProps)(VideoUpdate);
