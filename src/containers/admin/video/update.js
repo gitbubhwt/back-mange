@@ -35,9 +35,6 @@ export default class VideoUpdate extends Component {
       data: {}
     };
     this.classifyDom = ""; //分类
-    this.coverCount = 1;
-    this.coverPath = []; //封面文件路径
-    this.filePath = []; //文件路径
   }
 
   componentWillMount() {
@@ -50,16 +47,20 @@ export default class VideoUpdate extends Component {
     const self = this;
     this.props.form.validateFields((err, values) => {
       if (!err) {
-        if (this.coverPath.length == 0) {
+        let resdata = this.state.data;
+        if (resdata.cover.length == 0) {
           message.info("请上传封面");
           return;
         }
-        if (this.filePath.length == 0) {
+        if (resdata.paths.length == 0) {
           message.info("请至少上传一个文件");
           return;
         }
-        let cover = this.coverPath[0].path;
-        let path = this.filePath;
+        let cover = this.resdata[0].response.path;
+        let path = [];
+        for (let i = 0; i < resdata.paths.length; i++) {
+          path.push(resdata.paths[i].response);
+        }
         console.log(cover, path);
         this.setState({ loading: true });
         axios({
@@ -113,134 +114,56 @@ export default class VideoUpdate extends Component {
         obj.name = res[1].name;
         obj.info = res[1].info;
         obj.classifyId = res[1].classifyId;
-        obj.cover = [
-          {
-            uid: 1,
-            name: res[1].cover,
-            status: "done",
-            url: Const.HEAD + "/" + res[1].cover
-          }
-        ];
-        obj.paths = [];
-        this.coverPath = [
+        let tempCover = [
           {
             path: res[1].cover,
-            number: 1,
+            number: 0,
             createTime: new Date().getTime()
           }
         ];
-        for (let i = 0; i < res[1].path.length; i++) {
-          let path = res[1].path[i].path;
-          let number = res[1].path[i].number;
-          let createTime = res[1].path[i].createTime;
-          let te = {
-            uid: i,
-            name: path,
-            status: "done",
-            url: Const.HEAD + "/" + path
-          };
-          obj.paths.push(te);
-          let temp = {
-            path: path,
-            number: number,
-            createTime: createTime
-          };
-          this.filePath.push(temp);
-        }
+        obj.cover = this.getFileObj(tempCover);
+        obj.paths = this.getFileObj(res[1].path);
         console.log(obj);
-        console.log(this.coverPath);
-        console.log(this.filePath);
         this.setState({ data: obj });
       });
   }
 
-  pushPath(data, i) {
-    let obj = new Object();
-    obj.path = data.path;
-    obj.number = i;
-    obj.createTime = data.createTime;
-    return obj;
-  }
-
-  removePath(paths, key) {
-    let index = -1;
-    for (let i = 0; i < paths.length; i++) {
-      if (paths[i].path == key) {
-        index = i;
-        break;
-      }
+  getFileObj(res) {
+    console.log(res);
+    let arr = [];
+    for (let i = 0; i < res.length; i++) {
+      let path = res[i].path;
+      let number = res[i].number;
+      let createTime = res[i].createTime;
+      let te = {
+        uid: "" + number,
+        name: path,
+        status: "done",
+        response: {
+          code: 0,
+          data: {
+            path: path,
+            createTime: createTime,
+            number: number
+          }
+        }
+      };
+      arr.push(te);
     }
-    return index;
+    return arr;
   }
 
   //文件上传事件更新
   uploadChange = info => {
-    console.log(info);
     let file = info.file;
     let data = this.state.data;
-    if (file.status == "done") {
-      const code = file.response.code;
-      if (code != 0) {
-        console.log("上传失败,code:", code);
-        return;
-      }
-      let resdata = file.response.data;
-      //填充数据
-      //   this.filePath.push(this.pushPath(data, this.filePath.length + 1));
-
-      let te = {
-        uid: list.length + 1,
-        name: resdata.path,
-        status: "done",
-        url: Const.HEAD + "/" + resdata.path
-      };
-
-      data.paths.push(te);
-      console.log(data);
+    if (file.status == "uploading") {
+      data.paths = info.fileList;
       this.setState({ data: data });
-    } else if (file.status == "removed") {
-      console.log(info);
-      let uid = file.uid;
-      console.log(uid);
-      data.paths.splice(uid);
-      console.log(data);
+    } else if (file.status == "done") {
+      let index = data.paths.length - 1;
+      data.paths[index].uid = index + "";
       this.setState({ data: data });
-      //   const code = file.response.code;
-      //   if (code != 0) {
-      //     console.log("删除失败,code:", code);
-      //     return;
-      //   }
-      //   this.setState({ loading: true });
-      //   let path = file.response.data.path;
-      //   let url = Const.ADMIN_DEL_FILE + "?path=" + path;
-      //   axios({
-      //     method: "get",
-      //     url: url
-      //   }).then(res => {
-      //     this.setState({ loading: false });
-      //     if (res == null) {
-      //       return;
-      //     }
-      //     message.success(res);
-      //     let index = this.removePath(this.filePath, path);
-      //     this.filePath.splice(index);
-      //   });
-    }
-  };
-
-  //封面文件上传
-  coveruploadChange = info => {
-    info.fileList.slice(1);
-    let file = info.file;
-    if (file.status == "done") {
-      const code = file.response.code;
-      if (code != 0) {
-        console.log("上传失败,code:", code);
-        return;
-      }
-      let data = file.response.data;
-      //填充数据
-      this.coverPath.push(this.pushPath(data, this.coverPath.length + 1));
     } else if (file.status == "removed") {
       const code = file.response.code;
       if (code != 0) {
@@ -259,15 +182,51 @@ export default class VideoUpdate extends Component {
           return;
         }
         message.success(res);
-        let index = this.removePath(this.coverPath, path);
-        this.coverPath.splice(index);
+        data.paths = info.fileList;
+        console.log(data.paths);
+        this.setState({ data: data });
+      });
+    }
+  };
+
+  //封面文件上传
+  coveruploadChange = info => {
+    let file = info.file;
+    let data = this.state.data;
+    if (file.status == "uploading") {
+      data.cover = info.fileList;
+      this.setState({ data: data });
+    } else if (file.status == "done") {
+      let index = data.paths.length - 1;
+      data.cover[index].uid = index + "";
+      this.setState({ data: data });
+    } else if (file.status == "removed") {
+      const code = file.response.code;
+      if (code != 0) {
+        console.log("删除失败,code:", code);
+        return;
+      }
+      this.setState({ loading: true });
+      let path = file.response.data.path;
+      let url = Const.ADMIN_DEL_FILE + "?path=" + path;
+      axios({
+        method: "get",
+        url: url
+      }).then(res => {
+        this.setState({ loading: false });
+        if (res == null) {
+          return;
+        }
+        message.success(res);
+        data.cover = info.fileList;
+        this.setState({ data: data });
       });
     }
   };
 
   //封面上传之前校验
   coverBeforeUpload = file => {
-    let count = this.coverPath.length;
+    let count = this.state.data.cover;
     if (count >= 1) {
       message.warn("抱歉,封面只能上传一张");
       return false;
@@ -392,7 +351,8 @@ export default class VideoUpdate extends Component {
                   required: true,
                   message: "请上传封面"
                 }
-              ]
+              ],
+              initialValue: this.state.data.cover
             })(
               <Upload {...coverprops} fileList={this.state.data.cover}>
                 <Button>
@@ -409,7 +369,8 @@ export default class VideoUpdate extends Component {
                   required: true,
                   message: "请至少上传一个文件"
                 }
-              ]
+              ],
+              initialValue: this.state.data.paths
             })(
               <Upload {...props} fileList={this.state.data.paths}>
                 <Button>
