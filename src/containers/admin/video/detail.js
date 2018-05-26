@@ -30,7 +30,6 @@ export default class VideoDetail extends Component {
       console.log("params is empty,id:", id);
       return;
     }
-    this.props.dispatch(Detail(id, this.initDetail.bind(this)));
     this.setState({ loading: true });
     let url = Const.ADMIN_VIDEO_GET + "?id=" + id;
     axios({
@@ -56,18 +55,19 @@ export default class VideoDetail extends Component {
       <div className="videolist">
         <ContentTitle contenttitle="视频详情" />
         <Row>
-          <Col span={12}>
+          <Col span={13}>
             <video
-              style={{ width: 580, height: 360 }}
+              style={{ width: 560, }}
               controls
               poster={this.state.data.cover}
-              src={this.state.data.path}
+              src={this.state.data.path
+              }
             />
-            <Divider orientation="left" style={{ width: 580 }}>
+            <Divider orientation="left" style={{ width: 560 }}>
               {this.state.data.name}
             </Divider>
           </Col>
-          <Col span={12}>
+          <Col span={11}>
             <Row>
               <Col span={24}>
                 <Card title="分类">
