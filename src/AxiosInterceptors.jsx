@@ -37,19 +37,18 @@ axios.interceptors.response.use(response => {
       window.sessionStorage.clear("user");
       window.location.href = "/#/login";
       return null;
-    } else if (response.data.code == 500) {
-      message.error(response.data.message);
+    }else if(response.data.code==401 || response.data.code==402 || response.data.code==403){
+      message.warn(response.data.data);
+      return null;
+    }else {
+      message.error(response.data.data);
 
       let error = new createError(
-        response.data.message,
-        response.data.code,
         response.data.code,
         response.data.data
       );
       return Promise.reject(error);
-    } else {
-      message.error(redata);
-    }
+    } 
   }
   return redata;
 });
