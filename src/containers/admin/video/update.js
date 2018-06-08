@@ -35,6 +35,7 @@ export default class VideoUpdate extends Component {
       data: {}
     };
     this.classifyDom = ""; //分类
+    this.id=0;//视频id
   }
 
   componentWillMount() {
@@ -59,7 +60,9 @@ export default class VideoUpdate extends Component {
         let cover = resdata.cover[0].response.data.path;
         let path = [];
         for (let i = 0; i < resdata.paths.length; i++) {
-          path.push(resdata.paths[i].response);
+          let p=resdata.paths[i].response.data;
+          p.number=i+1;
+          path.push(p);
         }
         console.log(cover, path);
         this.setState({ loading: true });
@@ -71,7 +74,8 @@ export default class VideoUpdate extends Component {
             info: values.info,
             cover: cover,
             classifyId: values.classifyId,
-            path: path
+            path: path,
+            key:this.id
           }
         }).then(res => {
           this.setState({ loading: false });
@@ -102,6 +106,7 @@ export default class VideoUpdate extends Component {
       console.log("params is empty,id:", id);
       return;
     }
+    this.id=parseInt(this.props.params.id);
     this.setState({ loading: true });
     let url = Const.ADMIN_VIDEO_GET + "?id=" + id;
     axios
@@ -226,7 +231,8 @@ export default class VideoUpdate extends Component {
 
   //封面上传之前校验
   coverBeforeUpload = file => {
-    let count = this.state.data.cover;
+    let count = this.state.data.cover.length;
+    console.log("cover",count)
     if (count >= 1) {
       message.warn("抱歉,封面只能上传一张");
       return false;
